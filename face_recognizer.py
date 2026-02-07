@@ -5,22 +5,19 @@ import mysql.connector
 import cv2
 import os
 from datetime import datetime
+from config import DB_CONFIG, FACE_RECOGNITION_CONFIG, PATHS, UI_CONFIG
 
 class FaceRecognizer:
     def __init__(self, root):
         self.root = root
-        self.root.geometry("800x650+300+80")
-        self.root.title("Face Recognition")
-        self.root.configure(bg="#2c3e50")
+        ui_settings = UI_CONFIG['face_recognizer']
+        self.root.geometry(ui_settings['window_geometry'])
+        self.root.title(ui_settings['title'])
+        self.root.configure(bg=ui_settings['bg_color'])
 
         self.is_running = True
         self.script_dir = os.path.dirname(os.path.abspath(__file__))
-        
-        # --- Database Connection Details ---
-        self.db_host = "localhost"
-        self.db_user = "root"
-        self.db_password = "root" # CHANGE THIS TO YOUR MYSQL PASSWORD
-        self.db_name = "student_management"
+        self.db_config = DB_CONFIG
 
         title_lbl = Label(self.root, text="LIVE FACE RECOGNITION", font=("tahoma", 20, "bold"), bg="#2c3e50", fg="white")
         title_lbl.pack(pady=20)
@@ -30,7 +27,7 @@ class FaceRecognizer:
 
         # Load the trained model
         self.recognizer = cv2.face.LBPHFaceRecognizer_create()
-        classifier_path = os.path.join(self.script_dir, "classifier.xml")
+        classifier_path = os.path.join(self.script_dir, PATHS['classifier'])
         if not os.path.exists(classifier_path):
              messagebox.showerror("Error", "classifier.xml not found. Please train the model first.", parent=self.root)
              self.is_running = False
@@ -39,7 +36,7 @@ class FaceRecognizer:
         self.recognizer.read(classifier_path)
 
         # Load the cascade for face detection
-        cascade_path = os.path.join(self.script_dir, 'haarcascade_frontalface_default.xml')
+        cascade_path = os.path.join(self.script_dir, PATHS['cascade'])
         self.face_cascade = cv2.CascadeClassifier(cascade_path)
 
         self.cap = cv2.VideoCapture(0)
@@ -54,7 +51,7 @@ class FaceRecognizer:
 
     def mark_attendance(self, roll, name, dep):
         """Records attendance in a CSV file, ensuring no duplicates for the same day."""
-        attendance_file = os.path.join(self.script_dir, "attendance.csv")
+        attendance_file = os.path.join(self.script_dir, PATHS['attendance'])
         try:
             with open(attendance_file, "r+", newline="\n") as f:
                 myDataList = f.readlines()
@@ -86,16 +83,20 @@ class FaceRecognizer:
         ret, frame = self.cap.read()
         if ret:
             gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY) # Corrected line
-            faces = self.face_cascade.detectMultiScale(gray, 1.3, 5)
+            faces = self.face_cascade.detectMultiScale(
+                gray,
+                FACE_RECOGNITION_CONFIG['face_scale_factor'],
+                FACE_RECOGNITION_CONFIG['face_min_neighbors']
+            )
 
             # This loop processes every face found in the frame
             for (x, y, w, h) in faces:
                 cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 255, 0), 2)
                 id, confidence = self.recognizer.predict(gray[y:y+h, x:x+w])
 
-                if confidence < 80:
+                if confidence < FACE_RECOGNITION_CONFIG['confidence_threshold']:
                     try:
-                        conn = mysql.connector.connect(host=self.db_host, user=self.db_user, password=self.db_password, database=self.db_name)
+                        conn = mysql.connector.connect(**self.db_config)
                         my_cursor = conn.cursor()
                         my_cursor.execute("SELECT name, dep FROM students WHERE roll=%s", (str(id),))
                         row = my_cursor.fetchone()
@@ -120,11 +121,10 @@ class FaceRecognizer:
             self.video_label.imgtk = imgtk
             self.video_label.configure(image=imgtk)
 
-        self.root.after(15, self.update_frame)
+        self.root.after(FACE_RECOGNITION_CONFIG['frame_interval_ms'], self.update_frame)
 
     def on_close(self):
         self.is_running = False
         if self.cap.isOpened():
             self.cap.release()
         self.root.destroy()
-

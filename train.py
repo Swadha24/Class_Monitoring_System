@@ -6,15 +6,16 @@ import cv2
 import numpy as np
 
 # Import the centralized configuration
-from config import TRAINING_CONFIG, PATHS
+from config import TRAINING_CONFIG, PATHS, UI_CONFIG
 
 class Train:
     def __init__(self, root):
         self.root = root
-        self.root.geometry("500x350+500+200")
-        self.root.title("Train Face Recognition Model")
-        self.root.configure(bg="#2c3e50")
-        self.root.resizable(False, False)
+        ui_settings = UI_CONFIG['train']
+        self.root.geometry(ui_settings['window_geometry'])
+        self.root.title(ui_settings['title'])
+        self.root.configure(bg=ui_settings['bg_color'])
+        self.root.resizable(ui_settings['resizable'], ui_settings['resizable'])
 
         self.script_dir = os.path.dirname(os.path.abspath(__file__))
         self.progress_var = tk.DoubleVar()
@@ -122,4 +123,3 @@ if __name__ == "__main__":
     root = tk.Tk()
     app = Train(root)
     root.mainloop()
-
