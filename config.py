@@ -11,7 +11,7 @@ DB_CONFIG = {
 # Face Recognition Configuration
 FACE_RECOGNITION_CONFIG = {
     'confidence_threshold': 80,  # Lower = more strict recognition
-    'frame_interval': 15,  # milliseconds between frame updates
+    'frame_interval_ms': 15,  # milliseconds between frame updates
     'face_scale_factor': 1.3,
     'face_min_neighbors': 5
 }
@@ -33,7 +33,20 @@ PATHS = {
 
 # UI Configuration
 UI_CONFIG = {
-    'window_size': '800x650',
-    'window_position': '+300+80',
-    'title': 'Face Recognition System'
+    'face_recognizer': {
+        'window_geometry': '800x650+300+80',
+        'title': 'Face Recognition',
+        'bg_color': '#2c3e50'
+    },
+    'student': {
+        'window_geometry': '1366x768+0+0',
+        'title': 'Student Information System',
+        'fallback_bg': '#a2d2ff'
+    },
+    'train': {
+        'window_geometry': '500x350+500+200',
+        'title': 'Train Face Recognition Model',
+        'bg_color': '#2c3e50',
+        'resizable': False
+    }
 }

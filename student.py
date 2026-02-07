@@ -5,13 +5,14 @@ import mysql.connector
 import os
 import cv2
 # Import the new configuration file
-from config import DB_CONFIG, TRAINING_CONFIG, PATHS
+from config import DB_CONFIG, TRAINING_CONFIG, PATHS, UI_CONFIG
 
 class Student:
     def __init__(self, root):
         self.root = root
-        self.root.geometry("1366x768+0+0")
-        self.root.title("Student Information System")
+        ui_settings = UI_CONFIG['student']
+        self.root.geometry(ui_settings['window_geometry'])
+        self.root.title(ui_settings['title'])
 
         # ===== Use Database Connection Details from config.py =====
         self.db_config = DB_CONFIG
@@ -37,7 +38,7 @@ class Student:
             bg_img = tk.Label(self.root, image=self.photoimg)
             bg_img.place(x=0, y=0, width=1366, height=768)
         except FileNotFoundError:
-            self.root.config(bg="#a2d2ff")
+            self.root.config(bg=ui_settings['fallback_bg'])
             print(f"Warning: Background image not found at {bg_img_path}.")
 
         title_lbl = tk.Label(self.root, text="STUDENT INFORMATION SYSTEM", font=("times new roman", 35, "bold"), bg="white", fg="#03045e")
@@ -338,4 +339,3 @@ if __name__ == "__main__":
     root = tk.Tk()
     app = Student(root)
     root.mainloop()
-
